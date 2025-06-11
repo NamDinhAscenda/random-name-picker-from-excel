@@ -53,11 +53,11 @@ export default function ExcelChooserPage() {
 
   const handleSubmitFile = async (currentFile: File) => {
     if (!currentFile) {
-      setError("Please select a file first.");
+      setError("Vui lòng chọn một tệp trước.");
       toast({
         variant: "destructive",
-        title: "No file selected",
-        description: "Please select an Excel file to upload.",
+        title: "Chưa chọn tệp",
+        description: "Vui lòng chọn một tệp Excel để tải lên.",
       });
       return;
     }
@@ -73,17 +73,17 @@ export default function ExcelChooserPage() {
     const result = await processExcelFile(formData);
 
     if (result.error) {
-      setError(result.error);
+      setError(result.error); // Server-side errors will still be in English
       toast({
         variant: "destructive",
-        title: "Error processing file",
-        description: result.error,
+        title: "Lỗi xử lý tệp",
+        description: result.error, // Server-side errors will still be in English
       });
     } else if (result.names) {
       setNames(result.names);
       toast({
-        title: "File processed successfully!",
-        description: `${result.names.length} names loaded.`,
+        title: "Xử lý tệp thành công!",
+        description: `${result.names.length} tên đã được tải.`,
         action: <CheckCircle2 className="text-green-500" />,
       });
     }
@@ -105,15 +105,15 @@ export default function ExcelChooserPage() {
       const selectedName = filteredNames[randomIndex];
       setChosenName(selectedName);
       toast({
-        title: "Name Chosen!",
-        description: `"${selectedName}" is the lucky one!`,
+        title: "Đã Chọn Tên!",
+        description: `"${selectedName}" là người may mắn!`,
         action: <Gift className="text-primary" />,
       });
     } else if (names.length > 0 && filteredNames.length === 0) {
       toast({
         variant: "destructive",
-        title: "No names match search",
-        description: "Clear search or upload a new file to choose a name.",
+        title: "Không có tên nào khớp",
+        description: "Xóa tìm kiếm hoặc tải lên tệp mới để chọn tên.",
       });
     }
   };
@@ -136,19 +136,19 @@ export default function ExcelChooserPage() {
         <header className="text-center">
           <div className="flex items-center justify-center space-x-3 mb-2">
             <ListChecks className="h-10 w-10 text-primary" />
-            <h1 className="text-4xl font-headline font-bold text-foreground">ExcelentChooser</h1>
+            <h1 className="text-4xl font-headline font-bold text-foreground">Trình Chọn Tên Excel</h1>
           </div>
-          <p className="text-muted-foreground font-headline">Upload an Excel file with names and let fate decide!</p>
+          <p className="text-muted-foreground font-headline">Tải lên tệp Excel chứa tên và để số phận quyết định!</p>
         </header>
 
         <Card className="shadow-lg">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2 font-headline">
               <UploadCloud className="h-6 w-6 text-primary" />
-              <span>Upload Your Excel File</span>
+              <span>Tải Lên Tệp Excel Của Bạn</span>
             </CardTitle>
             <CardDescription>
-              Select an .xlsx file containing a list of names in a single column.
+              Chọn một tệp .xlsx chứa danh sách tên trong một cột duy nhất.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -172,7 +172,7 @@ export default function ExcelChooserPage() {
               {isLoading && (
                 <div className="flex items-center space-x-2 text-muted-foreground mt-2">
                   <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                  <span>Processing your file... Please wait.</span>
+                  <span>Đang xử lý tệp của bạn... Vui lòng đợi.</span>
                 </div>
               )}
             </div>
@@ -182,7 +182,7 @@ export default function ExcelChooserPage() {
         {error && (
           <Alert variant="destructive" className="shadow-md">
             <AlertCircle className="h-5 w-5" />
-            <AlertTitle>Error</AlertTitle>
+            <AlertTitle>Lỗi</AlertTitle>
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
@@ -192,10 +192,10 @@ export default function ExcelChooserPage() {
             <CardHeader>
               <CardTitle className="flex items-center space-x-2 font-headline">
                 <Users className="h-6 w-6 text-primary" />
-                <span>Loaded Names ({filteredNames.length} / {names.length})</span>
+                <span>Tên Đã Tải ({filteredNames.length} / {names.length})</span>
               </CardTitle>
               <CardDescription>
-                Here are the names loaded from your file. Use the search below or pick one randomly.
+                Đây là các tên được tải từ tệp của bạn. Sử dụng ô tìm kiếm bên dưới hoặc chọn một tên ngẫu nhiên.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -203,7 +203,7 @@ export default function ExcelChooserPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input
                   type="text"
-                  placeholder="Search names..."
+                  placeholder="Tìm kiếm tên..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
@@ -249,7 +249,7 @@ export default function ExcelChooserPage() {
                   </div>
                 ) : (
                   <p className="text-sm text-muted-foreground text-center py-4">
-                    {searchQuery && names.length > 0 ? "No names match your search." : "No names loaded or list is empty."}
+                    {searchQuery && names.length > 0 ? "Không có tên nào khớp với tìm kiếm của bạn." : "Chưa có tên nào được tải hoặc danh sách trống."}
                   </p>
                 )}
               </div>
@@ -262,7 +262,7 @@ export default function ExcelChooserPage() {
                 className="font-semibold"
               >
                 <Gift className="mr-2 h-5 w-5" />
-                Choose Random Name
+                Chọn Tên Ngẫu Nhiên
               </Button>
             </CardFooter>
           </Card>
@@ -273,7 +273,7 @@ export default function ExcelChooserPage() {
             <CardHeader className="items-center text-center">
               <CardTitle className="text-3xl font-headline flex items-center justify-center space-x-2">
                 <Gift className="h-8 w-8" />
-                <span>And the chosen one is...</span>
+                <span>Và người được chọn là...</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="text-center">
@@ -283,14 +283,14 @@ export default function ExcelChooserPage() {
             </CardContent>
              <CardFooter className="justify-center">
                 <Button variant="secondary" onClick={() => { setChosenName(null); setSearchQuery(""); setDebouncedSearchQuery("");}}>
-                    Clear Choice & Search
+                    Xóa Lựa Chọn & Tìm Kiếm
                 </Button>
             </CardFooter>
           </Card>
         )}
       </main>
       <footer className="mt-12 text-center text-sm text-muted-foreground">
-        <p>&copy; {new Date().getFullYear()} Kim Oanh's ExcelentChooser. Choose wisely!</p>
+        <p>&copy; {new Date().getFullYear()} Trình Chọn Tên Excel của Kim Oanh. Hãy chọn một cách khôn ngoan!</p>
       </footer>
     </div>
   );
