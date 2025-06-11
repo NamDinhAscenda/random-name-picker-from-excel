@@ -11,6 +11,8 @@ import { processExcelFile } from './actions';
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { useVirtualizer } from '@tanstack/react-virtual';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
 
 const DEBOUNCE_DELAY = 300; // milliseconds
 
@@ -132,7 +134,7 @@ export default function ExcelChooserPage() {
   const rowVirtualizer = useVirtualizer({
     count: filteredEntries.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 36, // Increased slightly for potentially taller content due to two pieces of info
+    estimateSize: () => 50, 
     overscan: 10,
   });
 
@@ -154,7 +156,7 @@ export default function ExcelChooserPage() {
               <span>Tải Lên Tệp Excel Của Bạn</span>
             </CardTitle>
             <CardDescription>
-              Chọn một tệp .xlsx chứa ID trong cột đầu tiên và tên trong cột thứ hai.
+              Chọn một tệp .xlsx. <strong>Quan trọng:</strong> Tệp phải có 2 cột: cột đầu tiên chứa ID và cột thứ hai chứa Tên. Xem ví dụ định dạng bên dưới.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -184,6 +186,47 @@ export default function ExcelChooserPage() {
             </div>
           </CardContent>
         </Card>
+
+        <Card className="shadow-md">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2 font-headline">
+              <FileText className="h-6 w-6 text-primary" />
+              <span>Định Dạng Tệp Excel Ví Dụ</span>
+            </CardTitle>
+             <CardDescription>
+              Dưới đây là ví dụ về cách tệp Excel của bạn nên được cấu trúc.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[150px]">ID</TableHead>
+                  <TableHead>Tên</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow>
+                  <TableCell className="font-medium">VTL0030358</TableCell>
+                  <TableCell>Nguyễn Văn A</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="font-medium">VTL0030359</TableCell>
+                  <TableCell>Trần Thị B</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="font-medium">NV0012345</TableCell>
+                  <TableCell>Lê Văn C</TableCell>
+                </TableRow>
+                 <TableRow>
+                  <TableCell className="font-medium">...</TableCell>
+                  <TableCell>...</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
 
         {error && (
           <Alert variant="destructive" className="shadow-md">
@@ -242,13 +285,13 @@ export default function ExcelChooserPage() {
                           }}
                           className="flex items-center p-1" 
                         >
-                          <div className="text-sm text-foreground p-1 rounded hover:bg-primary/10 flex items-center h-full w-full">
-                            <span className="mr-2 text-primary/70 w-8 text-right shrink-0 tabular-nums">
+                          <div className="text-sm text-foreground p-2 rounded hover:bg-primary/10 flex items-start h-full w-full border-b border-border/50">
+                            <span className="mr-3 text-primary/80 w-8 text-right shrink-0 tabular-nums pt-0.5">
                               {(virtualRow.index + 1)}.
                             </span>
-                            <UserCircle className="h-4 w-4 mr-2 text-primary/70 shrink-0" />
+                            <UserCircle className="h-5 w-5 mr-2.5 text-primary/80 shrink-0 mt-0.5" />
                             <div className="flex-grow overflow-hidden">
-                              <p className="font-medium truncate">{entry.name}</p>
+                              <p className="font-medium truncate text-base">{entry.name}</p>
                               <p className="text-xs text-muted-foreground truncate">{entry.id}</p>
                             </div>
                           </div>
@@ -300,8 +343,9 @@ export default function ExcelChooserPage() {
         )}
       </main>
       <footer className="mt-12 text-center text-sm text-muted-foreground">
-        <p>&copy; {new Date().getFullYear()} Trình Chọn ID & Tên Excel của Kim Oanh. Hãy chọn một cách khôn ngoan!</p>
+        <p>&copy; {new Date().getFullYear()} Trình Chọn ID & Tên Excel bởi Kim Oanh. Hãy chọn một cách khôn ngoan!</p>
       </footer>
     </div>
   );
 }
+
