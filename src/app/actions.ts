@@ -3,8 +3,13 @@
 
 import * as XLSX from 'xlsx';
 
+interface NameEntry {
+  id: string;
+  name: string;
+}
+
 interface ProcessExcelResult {
-  names?: string[];
+  entries?: NameEntry[];
   error?: string;
 }
 
@@ -29,20 +34,20 @@ export async function processExcelFile(formData: FormData): Promise<ProcessExcel
     }
     const worksheet = workbook.Sheets[firstSheetName];
     
-    // Convert sheet to JSON, assuming names are in the first column.
-    // header: 1 creates an array of arrays.
     const data: any[][] = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false });
     
-    const names = data
-      .map(row => row[0]) // Get the first element of each row
-      .filter(name => name !== null && name !== undefined && String(name).trim() !== "") // Filter out empty or undefined names
-      .map(name => String(name).trim()); // Convert to string and trim whitespace
+    const entries = data
+      .map(row => ({
+        id: row && row[0] != null ? String(row[0]).trim() : null,
+        name: row && row[1] != null ? String(row[1]).trim() : null,
+      }))
+      .filter(entry => entry.id && entry.id.length > 0 && entry.name && entry.name.length > 0) as NameEntry[];
 
-    if (names.length === 0) {
-      return { error: "No names found in the first column of the Excel file." };
+    if (entries.length === 0) {
+      return { error: "No valid entries (ID and Name pairs) found. Ensure the first column is ID and the second is Name." };
     }
 
-    return { names };
+    return { entries };
   } catch (e) {
     console.error("Error processing Excel file:", e);
     return { error: "Failed to process the Excel file. Make sure it is a valid .xlsx file." };

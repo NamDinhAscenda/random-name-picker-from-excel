@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { ListChecks, UploadCloud, Users, Gift, AlertCircle, Loader2, FileText, CheckCircle2, Search } from 'lucide-react';
+import { ListChecks, UploadCloud, Users, Gift, AlertCircle, Loader2, FileText, CheckCircle2, Search, UserCircle } from 'lucide-react';
 import { processExcelFile } from './actions';
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -14,10 +14,15 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 
 const DEBOUNCE_DELAY = 300; // milliseconds
 
+interface NameEntry {
+  id: string;
+  name: string;
+}
+
 export default function ExcelChooserPage() {
   const [file, setFile] = useState<File | null>(null);
-  const [names, setNames] = useState<string[]>([]);
-  const [chosenName, setChosenName] = useState<string | null>(null);
+  const [entries, setEntries] = useState<NameEntry[]>([]);
+  const [chosenEntry, setChosenEntry] = useState<NameEntry | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -41,8 +46,8 @@ export default function ExcelChooserPage() {
     if (selectedFile) {
       setFile(selectedFile);
       setError(null);
-      setNames([]);
-      setChosenName(null);
+      setEntries([]);
+      setChosenEntry(null);
       setSearchQuery("");
       setDebouncedSearchQuery("");
       handleSubmitFile(selectedFile);
@@ -64,8 +69,8 @@ export default function ExcelChooserPage() {
 
     setIsLoading(true);
     setError(null);
-    setNames([]);
-    setChosenName(null);
+    setEntries([]);
+    setChosenEntry(null);
 
     const formData = new FormData();
     formData.append("file", currentFile);
@@ -73,60 +78,61 @@ export default function ExcelChooserPage() {
     const result = await processExcelFile(formData);
 
     if (result.error) {
-      setError(result.error); // Server-side errors will still be in English
+      setError(result.error);
       toast({
         variant: "destructive",
         title: "Lỗi xử lý tệp",
-        description: result.error, // Server-side errors will still be in English
+        description: result.error,
       });
-    } else if (result.names) {
-      setNames(result.names);
+    } else if (result.entries) {
+      setEntries(result.entries);
       toast({
         title: "Xử lý tệp thành công!",
-        description: `${result.names.length} tên đã được tải.`,
+        description: `${result.entries.length} mục (ID/Tên) đã được tải.`,
         action: <CheckCircle2 className="text-green-500" />,
       });
     }
     setIsLoading(false);
   };
 
-  const filteredNames = useMemo(() => {
+  const filteredEntries = useMemo(() => {
     if (!debouncedSearchQuery.trim()) {
-      return names;
+      return entries;
     }
-    return names.filter(name =>
-      name.toLowerCase().includes(debouncedSearchQuery.toLowerCase())
+    return entries.filter(entry =>
+      entry.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+      entry.id.toLowerCase().includes(debouncedSearchQuery.toLowerCase())
     );
-  }, [names, debouncedSearchQuery]);
+  }, [entries, debouncedSearchQuery]);
 
   const handleChooseRandomName = () => {
-    if (filteredNames.length > 0) {
-      const randomIndex = Math.floor(Math.random() * filteredNames.length);
-      const selectedName = filteredNames[randomIndex];
-      setChosenName(selectedName);
+    if (filteredEntries.length > 0) {
+      const randomIndex = Math.floor(Math.random() * filteredEntries.length);
+      const selectedEntry = filteredEntries[randomIndex];
+      setChosenEntry(selectedEntry);
       toast({
-        title: "Đã Chọn Tên!",
-        description: `"${selectedName}" là người may mắn!`,
+        title: "Đã Chọn Mục!",
+        description: `"${selectedEntry.name} (ID: ${selectedEntry.id})" là người may mắn!`,
         action: <Gift className="text-primary" />,
       });
-    } else if (names.length > 0 && filteredNames.length === 0) {
+    } else if (entries.length > 0 && filteredEntries.length === 0) {
       toast({
         variant: "destructive",
-        title: "Không có tên nào khớp",
-        description: "Xóa tìm kiếm hoặc tải lên tệp mới để chọn tên.",
+        title: "Không có mục nào khớp",
+        description: "Xóa tìm kiếm hoặc tải lên tệp mới để chọn.",
       });
     }
   };
 
   useEffect(() => {
-    setChosenName(null);
-  }, [names, searchQuery]);
+    setChosenEntry(null);
+  }, [entries, searchQuery]);
 
 
   const rowVirtualizer = useVirtualizer({
-    count: filteredNames.length,
+    count: filteredEntries.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 28, 
+    estimateSize: () => 36, // Increased slightly for potentially taller content due to two pieces of info
     overscan: 10,
   });
 
@@ -136,9 +142,9 @@ export default function ExcelChooserPage() {
         <header className="text-center">
           <div className="flex items-center justify-center space-x-3 mb-2">
             <ListChecks className="h-10 w-10 text-primary" />
-            <h1 className="text-4xl font-headline font-bold text-foreground">Trình Chọn Tên Excel</h1>
+            <h1 className="text-4xl font-headline font-bold text-foreground">Trình Chọn ID & Tên Excel</h1>
           </div>
-          <p className="text-muted-foreground font-headline">Tải lên tệp Excel chứa tên và để số phận quyết định!</p>
+          <p className="text-muted-foreground font-headline">Tải lên tệp Excel chứa ID, tên và để số phận quyết định!</p>
         </header>
 
         <Card className="shadow-lg">
@@ -148,7 +154,7 @@ export default function ExcelChooserPage() {
               <span>Tải Lên Tệp Excel Của Bạn</span>
             </CardTitle>
             <CardDescription>
-              Chọn một tệp .xlsx chứa danh sách tên trong một cột duy nhất.
+              Chọn một tệp .xlsx chứa ID trong cột đầu tiên và tên trong cột thứ hai.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -187,15 +193,15 @@ export default function ExcelChooserPage() {
           </Alert>
         )}
 
-        {names.length > 0 && !isLoading && (
+        {entries.length > 0 && !isLoading && (
           <Card className="shadow-lg">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2 font-headline">
                 <Users className="h-6 w-6 text-primary" />
-                <span>Tên Đã Tải ({filteredNames.length} / {names.length})</span>
+                <span>Các Mục Đã Tải ({filteredEntries.length} / {entries.length})</span>
               </CardTitle>
               <CardDescription>
-                Đây là các tên được tải từ tệp của bạn. Sử dụng ô tìm kiếm bên dưới hoặc chọn một tên ngẫu nhiên.
+                Đây là danh sách các ID và tên được tải từ tệp của bạn. Sử dụng ô tìm kiếm hoặc chọn một mục ngẫu nhiên.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -203,7 +209,7 @@ export default function ExcelChooserPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input
                   type="text"
-                  placeholder="Tìm kiếm tên..."
+                  placeholder="Tìm kiếm ID hoặc tên..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
@@ -211,7 +217,7 @@ export default function ExcelChooserPage() {
               </div>
               <div
                 ref={parentRef}
-                className="h-64 w-full rounded-md border overflow-y-auto bg-muted/30 p-4"
+                className="h-64 w-full rounded-md border overflow-y-auto bg-muted/30 p-2" 
               >
                 {rowVirtualizer.getTotalSize() > 0 ? (
                   <div
@@ -222,7 +228,7 @@ export default function ExcelChooserPage() {
                     }}
                   >
                     {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-                      const name = filteredNames[virtualRow.index];
+                      const entry = filteredEntries[virtualRow.index];
                       return (
                         <div
                           key={virtualRow.key}
@@ -234,14 +240,17 @@ export default function ExcelChooserPage() {
                             height: `${virtualRow.size}px`,
                             transform: `translateY(${virtualRow.start}px)`,
                           }}
-                          className="flex items-center"
+                          className="flex items-center p-1" 
                         >
                           <div className="text-sm text-foreground p-1 rounded hover:bg-primary/10 flex items-center h-full w-full">
-                            <span className="mr-2 text-primary/70 w-7 text-right shrink-0 tabular-nums">
+                            <span className="mr-2 text-primary/70 w-8 text-right shrink-0 tabular-nums">
                               {(virtualRow.index + 1)}.
                             </span>
-                            <FileText className="h-4 w-4 mr-2 text-primary/70 shrink-0" />
-                            <span className="truncate">{name}</span>
+                            <UserCircle className="h-4 w-4 mr-2 text-primary/70 shrink-0" />
+                            <div className="flex-grow overflow-hidden">
+                              <p className="font-medium truncate">{entry.name}</p>
+                              <p className="text-xs text-muted-foreground truncate">{entry.id}</p>
+                            </div>
                           </div>
                         </div>
                       );
@@ -249,7 +258,7 @@ export default function ExcelChooserPage() {
                   </div>
                 ) : (
                   <p className="text-sm text-muted-foreground text-center py-4">
-                    {searchQuery && names.length > 0 ? "Không có tên nào khớp với tìm kiếm của bạn." : "Chưa có tên nào được tải hoặc danh sách trống."}
+                    {searchQuery && entries.length > 0 ? "Không có mục nào khớp với tìm kiếm của bạn." : "Chưa có mục nào được tải hoặc danh sách trống."}
                   </p>
                 )}
               </div>
@@ -257,32 +266,33 @@ export default function ExcelChooserPage() {
             <CardFooter className="flex justify-center">
               <Button
                 onClick={handleChooseRandomName}
-                disabled={isLoading || filteredNames.length === 0}
+                disabled={isLoading || filteredEntries.length === 0}
                 size="lg"
                 className="font-semibold"
               >
                 <Gift className="mr-2 h-5 w-5" />
-                Chọn Tên Ngẫu Nhiên
+                Chọn Mục Ngẫu Nhiên
               </Button>
             </CardFooter>
           </Card>
         )}
 
-        {chosenName && (
+        {chosenEntry && (
           <Card className="bg-primary text-primary-foreground shadow-xl transform transition-all duration-500 ease-out scale-100 animate-in fade-in zoom-in-90">
             <CardHeader className="items-center text-center">
               <CardTitle className="text-3xl font-headline flex items-center justify-center space-x-2">
                 <Gift className="h-8 w-8" />
-                <span>Và người được chọn là...</span>
+                <span>Và mục được chọn là...</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="text-center">
-              <p className="text-5xl font-bold font-headline py-6 px-4 bg-primary-foreground/10 rounded-lg shadow-inner break-all">
-                {chosenName}
-              </p>
+               <div className="py-6 px-4 bg-primary-foreground/10 rounded-lg shadow-inner">
+                <p className="text-4xl font-bold font-headline break-all">{chosenEntry.name}</p>
+                <p className="text-xl font-mono text-muted-foreground/90 mt-1">{chosenEntry.id}</p>
+              </div>
             </CardContent>
              <CardFooter className="justify-center">
-                <Button variant="secondary" onClick={() => { setChosenName(null); setSearchQuery(""); setDebouncedSearchQuery("");}}>
+                <Button variant="secondary" onClick={() => { setChosenEntry(null); setSearchQuery(""); setDebouncedSearchQuery("");}}>
                     Xóa Lựa Chọn & Tìm Kiếm
                 </Button>
             </CardFooter>
@@ -290,7 +300,7 @@ export default function ExcelChooserPage() {
         )}
       </main>
       <footer className="mt-12 text-center text-sm text-muted-foreground">
-        <p>&copy; {new Date().getFullYear()} Trình Chọn Tên Excel của Kim Oanh. Hãy chọn một cách khôn ngoan!</p>
+        <p>&copy; {new Date().getFullYear()} Trình Chọn ID & Tên Excel của Kim Oanh. Hãy chọn một cách khôn ngoan!</p>
       </footer>
     </div>
   );
