@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, type ChangeEvent, useEffect, useRef } from 'react';
+import { useState, type ChangeEvent, useEffect, useRef, useMemo } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,8 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { useVirtualizer } from '@tanstack/react-virtual';
 
+const DEBOUNCE_DELAY = 300; // milliseconds
+
 export default function ExcelChooserPage() {
   const [file, setFile] = useState<File | null>(null);
   const [names, setNames] = useState<string[]>([]);
@@ -19,9 +21,20 @@ export default function ExcelChooserPage() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState<string>("");
   const { toast } = useToast();
 
   const parentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, DEBOUNCE_DELAY);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchQuery]);
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
@@ -31,6 +44,7 @@ export default function ExcelChooserPage() {
       setNames([]);
       setChosenName(null);
       setSearchQuery("");
+      setDebouncedSearchQuery("");
       handleSubmitFile(selectedFile);
     } else {
       setFile(null);
@@ -76,20 +90,27 @@ export default function ExcelChooserPage() {
     setIsLoading(false);
   };
 
-  const handleChooseRandomName = () => {
-    const currentFilteredNames = names.filter(name =>
-      name.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredNames = useMemo(() => {
+    if (!debouncedSearchQuery.trim()) {
+      return names;
+    }
+    return names.filter(name =>
+      name.toLowerCase().includes(debouncedSearchQuery.toLowerCase())
     );
-    if (currentFilteredNames.length > 0) {
-      const randomIndex = Math.floor(Math.random() * currentFilteredNames.length);
-      const selectedName = currentFilteredNames[randomIndex];
+  }, [names, debouncedSearchQuery]);
+
+  const handleChooseRandomName = () => {
+    // Uses the memoized `filteredNames` which is based on `debouncedSearchQuery`
+    if (filteredNames.length > 0) {
+      const randomIndex = Math.floor(Math.random() * filteredNames.length);
+      const selectedName = filteredNames[randomIndex];
       setChosenName(selectedName);
       toast({
         title: "Name Chosen!",
         description: `"${selectedName}" is the lucky one!`,
         action: <Gift className="text-primary" />,
       });
-    } else if (names.length > 0 && currentFilteredNames.length === 0) {
+    } else if (names.length > 0 && filteredNames.length === 0) {
       toast({
         variant: "destructive",
         title: "No names match search",
@@ -99,12 +120,11 @@ export default function ExcelChooserPage() {
   };
 
   useEffect(() => {
+    // Clear chosen name if the raw search query changes (immediate feedback)
+    // or if the list of names itself changes.
     setChosenName(null);
   }, [names, searchQuery]);
 
-  const filteredNames = names.filter(name =>
-    name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   const rowVirtualizer = useVirtualizer({
     count: filteredNames.length,
@@ -143,13 +163,13 @@ export default function ExcelChooserPage() {
                 onChange={handleFileChange}
                 disabled={isLoading}
                 className={cn(
-                  "bg-input", 
+                  "bg-input",
                   "file:text-primary-foreground file:bg-primary hover:file:bg-primary/90",
                   "file:font-semibold",
-                  "file:py-2 file:px-4", 
-                  "file:rounded-md",   
+                  "file:py-2 file:px-4",
+                  "file:rounded-md",
                   "file:border-0",
-                  "file:mr-3"          
+                  "file:mr-3"
                 )}
               />
               {isLoading && (
@@ -196,7 +216,7 @@ export default function ExcelChooserPage() {
                 ref={parentRef}
                 className="h-64 w-full rounded-md border overflow-y-auto bg-muted/30 p-4"
               >
-                {filteredNames.length > 0 ? (
+                {rowVirtualizer.getTotalSize() > 0 ? (
                   <div
                     style={{
                       height: `${rowVirtualizer.getTotalSize()}px`,
@@ -206,7 +226,8 @@ export default function ExcelChooserPage() {
                   >
                     {rowVirtualizer.getVirtualItems().map((virtualRow) => {
                       const name = filteredNames[virtualRow.index];
-                      const originalIndex = names.indexOf(name);
+                      const originalIndex = names.indexOf(name); // This could be slow if names array is huge. Consider if this index is strictly needed or if virtualRow.index is sufficient for display.
+                                                                  // For now, assuming `names` isn't excessively large for indexOf to be a bottleneck compared to DOM updates.
                       return (
                         <div
                           key={virtualRow.key}
@@ -218,13 +239,14 @@ export default function ExcelChooserPage() {
                             height: `${virtualRow.size}px`,
                             transform: `translateY(${virtualRow.start}px)`,
                           }}
+                          className="flex items-center" // Added for vertical centering of content
                         >
-                          <div className="text-sm text-foreground p-1 rounded hover:bg-primary/10 flex items-center h-full">
-                            <span className="mr-2 text-primary/70 w-6 text-right shrink-0">
+                          <div className="text-sm text-foreground p-1 rounded hover:bg-primary/10 flex items-center h-full w-full">
+                            <span className="mr-2 text-primary/70 w-7 text-right shrink-0 tabular-nums"> {/* Increased width for larger numbers, added tabular-nums */}
                               {(originalIndex + 1)}.
                             </span>
                             <FileText className="h-4 w-4 mr-2 text-primary/70 shrink-0" />
-                            {name}
+                            <span className="truncate">{name}</span> {/* Added truncate for long names */}
                           </div>
                         </div>
                       );
@@ -232,16 +254,16 @@ export default function ExcelChooserPage() {
                   </div>
                 ) : (
                   <p className="text-sm text-muted-foreground text-center py-4">
-                    No names match your search.
+                    {searchQuery && names.length > 0 ? "No names match your search." : "No names loaded or list is empty."}
                   </p>
                 )}
               </div>
             </CardContent>
             <CardFooter className="flex justify-center">
-              <Button 
-                onClick={handleChooseRandomName} 
-                disabled={isLoading || filteredNames.length === 0} 
-                size="lg" 
+              <Button
+                onClick={handleChooseRandomName}
+                disabled={isLoading || filteredNames.length === 0}
+                size="lg"
                 className="font-semibold"
               >
                 <Gift className="mr-2 h-5 w-5" />
@@ -260,12 +282,12 @@ export default function ExcelChooserPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="text-center">
-              <p className="text-5xl font-bold font-headline py-6 px-4 bg-primary-foreground/10 rounded-lg shadow-inner">
+              <p className="text-5xl font-bold font-headline py-6 px-4 bg-primary-foreground/10 rounded-lg shadow-inner break-all"> {/* Added break-all for very long chosen names */}
                 {chosenName}
               </p>
             </CardContent>
              <CardFooter className="justify-center">
-                <Button variant="secondary" onClick={() => { setChosenName(null); setSearchQuery("");}}>
+                <Button variant="secondary" onClick={() => { setChosenName(null); setSearchQuery(""); /* also clear debounced */ setDebouncedSearchQuery("");}}>
                     Clear Choice & Search
                 </Button>
             </CardFooter>
@@ -278,3 +300,5 @@ export default function ExcelChooserPage() {
     </div>
   );
 }
+
+    
