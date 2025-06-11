@@ -182,13 +182,7 @@ export default function ExcelChooserPage() {
               <UploadCloud className="h-6 w-6 text-primary" />
               <span>Tải lên tệp Excel của bạn</span>
             </CardTitle>
-            <CardDescription>
-              Chọn một tệp .xlsx. <strong>Quan trọng:</strong> Tệp phải có một
-              hàng tiêu đề. Dữ liệu ID phải ở cột đầu tiên và dữ liệu tên ở cột
-              thứ hai, bắt đầu từ hàng thứ hai sau tiêu đề. Tên cột trong hàng
-              tiêu đề không quan trọng, hàng tiêu đề sẽ được bỏ qua. Xem ví dụ
-              định dạng bên dưới.
-            </CardDescription>
+            <CardDescription>Chọn một tệp .xlsx</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="">
