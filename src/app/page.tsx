@@ -156,7 +156,7 @@ export default function ExcelChooserPage() {
               <span>Tải Lên Tệp Excel Của Bạn</span>
             </CardTitle>
             <CardDescription>
-              Chọn một tệp .xlsx. <strong>Quan trọng:</strong> Tệp phải có 2 cột: cột đầu tiên chứa ID và cột thứ hai chứa Tên. Xem ví dụ định dạng bên dưới.
+              Chọn một tệp .xlsx. <strong>Quan trọng:</strong> Tệp phải có một hàng tiêu đề. Dữ liệu ID phải ở cột đầu tiên và dữ liệu Tên ở cột thứ hai, bắt đầu từ hàng thứ hai sau tiêu đề. Tên cột trong hàng tiêu đề không quan trọng, hàng tiêu đề sẽ được bỏ qua. Xem ví dụ định dạng bên dưới.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -194,15 +194,15 @@ export default function ExcelChooserPage() {
               <span>Định Dạng Tệp Excel Ví Dụ</span>
             </CardTitle>
              <CardDescription>
-              Dưới đây là ví dụ về cách tệp Excel của bạn nên được cấu trúc.
+              Dưới đây là ví dụ về cách tệp Excel của bạn nên được cấu trúc (hàng đầu tiên là tiêu đề và sẽ được bỏ qua).
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[150px]">ID</TableHead>
-                  <TableHead>Tên</TableHead>
+                  <TableHead className="w-[150px]">Mã Nhân Viên (ví dụ)</TableHead>
+                  <TableHead>Họ Và Tên (ví dụ)</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -325,7 +325,7 @@ export default function ExcelChooserPage() {
             <CardHeader className="items-center text-center">
               <CardTitle className="text-3xl font-headline flex items-center justify-center space-x-2">
                 <Gift className="h-8 w-8" />
-                <span>Và mục được chọn là...</span>
+                <span>Và người được chọn là...</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="text-center">
