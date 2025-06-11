@@ -1,7 +1,7 @@
 
 "use server";
 
-import *XLSX from 'xlsx';
+import * as XLSX from 'xlsx';
 
 interface ProcessExcelResult {
   names?: string[];
