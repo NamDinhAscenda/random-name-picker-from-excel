@@ -1,16 +1,16 @@
 
 "use client";
 
-import { useState, type ChangeEvent, useEffect } from 'react';
+import { useState, type ChangeEvent, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ListChecks, UploadCloud, Users, Gift, AlertCircle, Loader2, FileText, CheckCircle2, Search } from 'lucide-react';
 import { processExcelFile } from './actions';
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { useVirtualizer } from '@tanstack/react-virtual';
 
 export default function ExcelChooserPage() {
   const [file, setFile] = useState<File | null>(null);
@@ -20,6 +20,8 @@ export default function ExcelChooserPage() {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const { toast } = useToast();
+
+  const parentRef = useRef<HTMLDivElement>(null);
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
@@ -75,19 +77,19 @@ export default function ExcelChooserPage() {
   };
 
   const handleChooseRandomName = () => {
-    const filteredNames = names.filter(name =>
+    const currentFilteredNames = names.filter(name =>
       name.toLowerCase().includes(searchQuery.toLowerCase())
     );
-    if (filteredNames.length > 0) {
-      const randomIndex = Math.floor(Math.random() * filteredNames.length);
-      const selectedName = filteredNames[randomIndex];
+    if (currentFilteredNames.length > 0) {
+      const randomIndex = Math.floor(Math.random() * currentFilteredNames.length);
+      const selectedName = currentFilteredNames[randomIndex];
       setChosenName(selectedName);
       toast({
         title: "Name Chosen!",
         description: `"${selectedName}" is the lucky one!`,
         action: <Gift className="text-primary" />,
       });
-    } else if (names.length > 0 && filteredNames.length === 0) {
+    } else if (names.length > 0 && currentFilteredNames.length === 0) {
       toast({
         variant: "destructive",
         title: "No names match search",
@@ -103,6 +105,13 @@ export default function ExcelChooserPage() {
   const filteredNames = names.filter(name =>
     name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const rowVirtualizer = useVirtualizer({
+    count: filteredNames.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 28, // Estimated height of an item (24px content + 4px spacing)
+    overscan: 10,
+  });
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-8 bg-background font-body">
@@ -134,17 +143,17 @@ export default function ExcelChooserPage() {
                 onChange={handleFileChange}
                 disabled={isLoading}
                 className={cn(
-                  "bg-input", // Use the specific input background color for the field
+                  "bg-input", 
                   "file:text-primary-foreground file:bg-primary hover:file:bg-primary/90",
                   "file:font-semibold",
-                  "file:py-2 file:px-4", // Standard button padding
-                  "file:rounded-md",    // Button itself is rounded
+                  "file:py-2 file:px-4", 
+                  "file:rounded-md",   
                   "file:border-0",
-                  "file:mr-3"           // Add some space between button and "No file chosen" text
+                  "file:mr-3"          
                 )}
               />
               {isLoading && (
-                <div className="flex items-center space-x-2 text-muted-foreground">
+                <div className="flex items-center space-x-2 text-muted-foreground mt-2">
                   <Loader2 className="h-5 w-5 animate-spin text-primary" />
                   <span>Processing your file... Please wait.</span>
                 </div>
@@ -183,21 +192,50 @@ export default function ExcelChooserPage() {
                   className="pl-10"
                 />
               </div>
-              <ScrollArea className="h-64 w-full rounded-md border p-4 bg-muted/30">
+              <div
+                ref={parentRef}
+                className="h-64 w-full rounded-md border overflow-y-auto bg-muted/30 p-4"
+              >
                 {filteredNames.length > 0 ? (
-                  <ul className="space-y-1">
-                    {filteredNames.map((name, index) => (
-                      <li key={index} className="text-sm text-foreground p-1 rounded hover:bg-primary/10 flex items-center">
-                        <span className="mr-2 text-primary/70 w-6 text-right shrink-0">{(names.indexOf(name) + 1)}.</span>
-                        <FileText className="h-4 w-4 mr-2 text-primary/70 shrink-0" />
-                        {name}
-                      </li>
-                    ))}
-                  </ul>
+                  <div
+                    style={{
+                      height: `${rowVirtualizer.getTotalSize()}px`,
+                      width: '100%',
+                      position: 'relative',
+                    }}
+                  >
+                    {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                      const name = filteredNames[virtualRow.index];
+                      const originalIndex = names.indexOf(name);
+                      return (
+                        <div
+                          key={virtualRow.key}
+                          style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            width: '100%',
+                            height: `${virtualRow.size}px`,
+                            transform: `translateY(${virtualRow.start}px)`,
+                          }}
+                        >
+                          <div className="text-sm text-foreground p-1 rounded hover:bg-primary/10 flex items-center h-full">
+                            <span className="mr-2 text-primary/70 w-6 text-right shrink-0">
+                              {(originalIndex + 1)}.
+                            </span>
+                            <FileText className="h-4 w-4 mr-2 text-primary/70 shrink-0" />
+                            {name}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground text-center py-4">No names match your search.</p>
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No names match your search.
+                  </p>
                 )}
-              </ScrollArea>
+              </div>
             </CardContent>
             <CardFooter className="flex justify-center">
               <Button 
