@@ -90,7 +90,7 @@ export default function ExcelChooserPage() {
       setEntries(result.entries);
       toast({
         title: "Xử lý tệp thành công!",
-        description: `${result.entries.length} mục (ID/Tên) đã được tải.`,
+        description: `${result.entries.length} mục (ID/tên) đã được tải.`,
         action: <CheckCircle2 className="text-green-500" />,
       });
     }
@@ -113,7 +113,7 @@ export default function ExcelChooserPage() {
       const selectedEntry = filteredEntries[randomIndex];
       setChosenEntry(selectedEntry);
       toast({
-        title: "Đã Chọn Mục!",
+        title: "Đã chọn mục!",
         description: `"${selectedEntry.name} (ID: ${selectedEntry.id})" là người may mắn!`,
         action: <Gift className="text-primary" />,
       });
@@ -134,7 +134,7 @@ export default function ExcelChooserPage() {
   const rowVirtualizer = useVirtualizer({
     count: filteredEntries.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 58, // Adjusted estimated size for better spacing
+    estimateSize: () => 58, 
     overscan: 10,
   });
 
@@ -144,7 +144,7 @@ export default function ExcelChooserPage() {
         <header className="text-center">
           <div className="flex items-center justify-center space-x-3 mb-2">
             <ListChecks className="h-10 w-10 text-primary" />
-            <h1 className="text-4xl font-headline font-bold text-foreground">Trình Chọn ID & Tên Excel</h1>
+            <h1 className="text-4xl font-headline font-bold text-foreground">Trình chọn ID & tên Excel</h1>
           </div>
           <p className="text-muted-foreground font-headline">Tải lên tệp Excel chứa ID, tên và để số phận quyết định!</p>
         </header>
@@ -153,10 +153,10 @@ export default function ExcelChooserPage() {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2 font-headline">
               <UploadCloud className="h-6 w-6 text-primary" />
-              <span>Tải Lên Tệp Excel Của Bạn</span>
+              <span>Tải lên tệp Excel của bạn</span>
             </CardTitle>
             <CardDescription>
-              Chọn một tệp .xlsx. <strong>Quan trọng:</strong> Tệp phải có một hàng tiêu đề. Dữ liệu ID phải ở cột đầu tiên và dữ liệu Tên ở cột thứ hai, bắt đầu từ hàng thứ hai sau tiêu đề. Tên cột trong hàng tiêu đề không quan trọng, hàng tiêu đề sẽ được bỏ qua. Xem ví dụ định dạng bên dưới.
+              Chọn một tệp .xlsx. <strong>Quan trọng:</strong> Tệp phải có một hàng tiêu đề. Dữ liệu ID phải ở cột đầu tiên và dữ liệu tên ở cột thứ hai, bắt đầu từ hàng thứ hai sau tiêu đề. Tên cột trong hàng tiêu đề không quan trọng, hàng tiêu đề sẽ được bỏ qua. Xem ví dụ định dạng bên dưới.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -191,7 +191,7 @@ export default function ExcelChooserPage() {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2 font-headline">
               <FileText className="h-6 w-6 text-primary" />
-              <span>Định Dạng Tệp Excel Ví Dụ</span>
+              <span>Định dạng tệp Excel ví dụ</span>
             </CardTitle>
              <CardDescription>
               Dưới đây là ví dụ về cách tệp Excel của bạn nên được cấu trúc (hàng đầu tiên là tiêu đề và sẽ được bỏ qua).
@@ -201,8 +201,8 @@ export default function ExcelChooserPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[150px]">Mã Nhân Viên (ví dụ)</TableHead>
-                  <TableHead>Họ Và Tên (ví dụ)</TableHead>
+                  <TableHead className="w-[150px]">Mã nhân viên (ví dụ)</TableHead>
+                  <TableHead>Họ và tên (ví dụ)</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -241,7 +241,7 @@ export default function ExcelChooserPage() {
             <CardHeader>
               <CardTitle className="flex items-center space-x-2 font-headline">
                 <Users className="h-6 w-6 text-primary" />
-                <span>Các Mục Đã Tải ({filteredEntries.length} / {entries.length})</span>
+                <span>Các mục đã tải ({filteredEntries.length} / {entries.length})</span>
               </CardTitle>
               <CardDescription>
                 Đây là danh sách các ID và tên được tải từ tệp của bạn. Sử dụng ô tìm kiếm hoặc chọn một mục ngẫu nhiên.
@@ -314,7 +314,7 @@ export default function ExcelChooserPage() {
                 className="font-semibold"
               >
                 <Gift className="mr-2 h-5 w-5" />
-                Chọn Mục Ngẫu Nhiên
+                Chọn mục ngẫu nhiên
               </Button>
             </CardFooter>
           </Card>
@@ -336,14 +336,14 @@ export default function ExcelChooserPage() {
             </CardContent>
              <CardFooter className="justify-center">
                 <Button variant="secondary" onClick={() => { setChosenEntry(null); setSearchQuery(""); setDebouncedSearchQuery("");}}>
-                    Xóa Lựa Chọn & Tìm Kiếm
+                    Xóa lựa chọn & tìm kiếm
                 </Button>
             </CardFooter>
           </Card>
         )}
       </main>
       <footer className="mt-12 text-center text-sm text-muted-foreground">
-        <p>&copy; {new Date().getFullYear()} Trình Chọn ID & Tên Excel bởi Kim Oanh. Hãy chọn một cách khôn ngoan!</p>
+        <p>&copy; {new Date().getFullYear()} Trình chọn ID & tên Excel bởi Kim Oanh. Hãy chọn một cách khôn ngoan!</p>
       </footer>
     </div>
   );
