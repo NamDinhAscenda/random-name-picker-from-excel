@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { ListChecks, UploadCloud, Users, Gift, AlertCircle, Loader2, FileText, CheckCircle2 } from 'lucide-react';
+import { ListChecks, UploadCloud, Users, Gift, AlertCircle, Loader2, FileText, CheckCircle2, Search } from 'lucide-react';
 import { processExcelFile } from './actions';
 import { useToast } from "@/hooks/use-toast";
 
@@ -17,17 +17,17 @@ export default function ExcelChooserPage() {
   const [chosenName, setChosenName] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const { toast } = useToast();
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
     if (selectedFile) {
       setFile(selectedFile);
-      setError(null); // Clear previous errors
-      setNames([]); // Clear previous names
-      setChosenName(null); // Clear previous chosen name
-      
-      // Automatically submit the file
+      setError(null);
+      setNames([]);
+      setChosenName(null);
+      setSearchQuery("");
       handleSubmitFile(selectedFile);
     } else {
       setFile(null);
@@ -74,22 +74,34 @@ export default function ExcelChooserPage() {
   };
 
   const handleChooseRandomName = () => {
-    if (names.length > 0) {
-      const randomIndex = Math.floor(Math.random() * names.length);
-      const selectedName = names[randomIndex];
+    const filteredNames = names.filter(name =>
+      name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    if (filteredNames.length > 0) {
+      const randomIndex = Math.floor(Math.random() * filteredNames.length);
+      const selectedName = filteredNames[randomIndex];
       setChosenName(selectedName);
       toast({
         title: "Name Chosen!",
         description: `"${selectedName}" is the lucky one!`,
         action: <Gift className="text-primary" />,
       });
+    } else if (names.length > 0 && filteredNames.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "No names match search",
+        description: "Clear search or upload a new file to choose a name.",
+      });
     }
   };
-  
-  // Effect to clear chosen name if names list changes (e.g. new file upload)
+
   useEffect(() => {
     setChosenName(null);
-  }, [names]);
+  }, [names, searchQuery]);
+
+  const filteredNames = names.filter(name =>
+    name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-8 bg-background font-body">
@@ -145,26 +157,46 @@ export default function ExcelChooserPage() {
             <CardHeader>
               <CardTitle className="flex items-center space-x-2 font-headline">
                 <Users className="h-6 w-6 text-primary" />
-                <span>Loaded Names ({names.length})</span>
+                <span>Loaded Names ({filteredNames.length} / {names.length})</span>
               </CardTitle>
               <CardDescription>
-                Here are the names loaded from your file. Ready to pick one?
+                Here are the names loaded from your file. Use the search below or pick one randomly.
               </CardDescription>
             </CardHeader>
             <CardContent>
+              <div className="mb-4 relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <Input
+                  type="text"
+                  placeholder="Search names..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
               <ScrollArea className="h-64 w-full rounded-md border p-4 bg-muted/30">
-                <ul className="space-y-1">
-                  {names.map((name, index) => (
-                    <li key={index} className="text-sm text-foreground p-1 rounded hover:bg-primary/10 flex items-center">
-                      <FileText className="h-4 w-4 mr-2 text-primary/70 shrink-0" />
-                      {name}
-                    </li>
-                  ))}
-                </ul>
+                {filteredNames.length > 0 ? (
+                  <ul className="space-y-1">
+                    {filteredNames.map((name, index) => (
+                      <li key={index} className="text-sm text-foreground p-1 rounded hover:bg-primary/10 flex items-center">
+                        <span className="mr-2 text-primary/70 w-6 text-right shrink-0">{(names.indexOf(name) + 1)}.</span>
+                        <FileText className="h-4 w-4 mr-2 text-primary/70 shrink-0" />
+                        {name}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">No names match your search.</p>
+                )}
               </ScrollArea>
             </CardContent>
             <CardFooter className="flex justify-center">
-              <Button onClick={handleChooseRandomName} disabled={isLoading || names.length === 0} size="lg" className="font-semibold">
+              <Button 
+                onClick={handleChooseRandomName} 
+                disabled={isLoading || filteredNames.length === 0} 
+                size="lg" 
+                className="font-semibold"
+              >
                 <Gift className="mr-2 h-5 w-5" />
                 Choose Random Name
               </Button>
@@ -186,8 +218,8 @@ export default function ExcelChooserPage() {
               </p>
             </CardContent>
              <CardFooter className="justify-center">
-                <Button variant="secondary" onClick={() => setChosenName(null)}>
-                    Clear Choice
+                <Button variant="secondary" onClick={() => { setChosenName(null); setSearchQuery("");}}>
+                    Clear Choice & Search
                 </Button>
             </CardFooter>
           </Card>
