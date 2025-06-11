@@ -235,7 +235,7 @@ export default function ExcelChooserPage() {
         )}
       </main>
       <footer className="mt-12 text-center text-sm text-muted-foreground">
-        <p>&copy; {new Date().getFullYear()} ExcelentChooser. Choose wisely!</p>
+        <p>&copy; {new Date().getFullYear()} Kim Oanh's ExcelentChooser. Choose wisely!</p>
       </footer>
     </div>
   );
