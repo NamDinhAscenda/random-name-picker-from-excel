@@ -126,7 +126,7 @@ export default function ExcelChooserPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="">
               <Input
                 id="excel-file"
                 type="file"
