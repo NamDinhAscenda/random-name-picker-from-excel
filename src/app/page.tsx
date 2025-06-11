@@ -100,7 +100,6 @@ export default function ExcelChooserPage() {
   }, [names, debouncedSearchQuery]);
 
   const handleChooseRandomName = () => {
-    // Uses the memoized `filteredNames` which is based on `debouncedSearchQuery`
     if (filteredNames.length > 0) {
       const randomIndex = Math.floor(Math.random() * filteredNames.length);
       const selectedName = filteredNames[randomIndex];
@@ -120,8 +119,6 @@ export default function ExcelChooserPage() {
   };
 
   useEffect(() => {
-    // Clear chosen name if the raw search query changes (immediate feedback)
-    // or if the list of names itself changes.
     setChosenName(null);
   }, [names, searchQuery]);
 
@@ -129,7 +126,7 @@ export default function ExcelChooserPage() {
   const rowVirtualizer = useVirtualizer({
     count: filteredNames.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 28, // Estimated height of an item (24px content + 4px spacing)
+    estimateSize: () => 28, 
     overscan: 10,
   });
 
@@ -226,8 +223,6 @@ export default function ExcelChooserPage() {
                   >
                     {rowVirtualizer.getVirtualItems().map((virtualRow) => {
                       const name = filteredNames[virtualRow.index];
-                      const originalIndex = names.indexOf(name); // This could be slow if names array is huge. Consider if this index is strictly needed or if virtualRow.index is sufficient for display.
-                                                                  // For now, assuming `names` isn't excessively large for indexOf to be a bottleneck compared to DOM updates.
                       return (
                         <div
                           key={virtualRow.key}
@@ -239,14 +234,14 @@ export default function ExcelChooserPage() {
                             height: `${virtualRow.size}px`,
                             transform: `translateY(${virtualRow.start}px)`,
                           }}
-                          className="flex items-center" // Added for vertical centering of content
+                          className="flex items-center"
                         >
                           <div className="text-sm text-foreground p-1 rounded hover:bg-primary/10 flex items-center h-full w-full">
-                            <span className="mr-2 text-primary/70 w-7 text-right shrink-0 tabular-nums"> {/* Increased width for larger numbers, added tabular-nums */}
-                              {(originalIndex + 1)}.
+                            <span className="mr-2 text-primary/70 w-7 text-right shrink-0 tabular-nums">
+                              {(virtualRow.index + 1)}.
                             </span>
                             <FileText className="h-4 w-4 mr-2 text-primary/70 shrink-0" />
-                            <span className="truncate">{name}</span> {/* Added truncate for long names */}
+                            <span className="truncate">{name}</span>
                           </div>
                         </div>
                       );
@@ -282,12 +277,12 @@ export default function ExcelChooserPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="text-center">
-              <p className="text-5xl font-bold font-headline py-6 px-4 bg-primary-foreground/10 rounded-lg shadow-inner break-all"> {/* Added break-all for very long chosen names */}
+              <p className="text-5xl font-bold font-headline py-6 px-4 bg-primary-foreground/10 rounded-lg shadow-inner break-all">
                 {chosenName}
               </p>
             </CardContent>
              <CardFooter className="justify-center">
-                <Button variant="secondary" onClick={() => { setChosenName(null); setSearchQuery(""); /* also clear debounced */ setDebouncedSearchQuery("");}}>
+                <Button variant="secondary" onClick={() => { setChosenName(null); setSearchQuery(""); setDebouncedSearchQuery("");}}>
                     Clear Choice & Search
                 </Button>
             </CardFooter>
@@ -300,5 +295,3 @@ export default function ExcelChooserPage() {
     </div>
   );
 }
-
-    
