@@ -10,6 +10,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ListChecks, UploadCloud, Users, Gift, AlertCircle, Loader2, FileText, CheckCircle2, Search } from 'lucide-react';
 import { processExcelFile } from './actions';
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 export default function ExcelChooserPage() {
   const [file, setFile] = useState<File | null>(null);
@@ -132,7 +133,15 @@ export default function ExcelChooserPage() {
                 accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 onChange={handleFileChange}
                 disabled={isLoading}
-                className="file:text-primary-foreground file:bg-primary hover:file:bg-primary/90 file:font-semibold file:py-2 file:px-4 file:rounded-md file:border-0"
+                className={cn(
+                  "bg-input", // Use the specific input background color for the field
+                  "file:text-primary-foreground file:bg-primary hover:file:bg-primary/90",
+                  "file:font-semibold",
+                  "file:py-2 file:px-4", // Standard button padding
+                  "file:rounded-md",    // Button itself is rounded
+                  "file:border-0",
+                  "file:mr-3"           // Add some space between button and "No file chosen" text
+                )}
               />
               {isLoading && (
                 <div className="flex items-center space-x-2 text-muted-foreground">
