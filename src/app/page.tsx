@@ -134,7 +134,7 @@ export default function ExcelChooserPage() {
   const rowVirtualizer = useVirtualizer({
     count: filteredEntries.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 50, 
+    estimateSize: () => 58, // Adjusted estimated size for better spacing
     overscan: 10,
   });
 
@@ -283,16 +283,16 @@ export default function ExcelChooserPage() {
                             height: `${virtualRow.size}px`,
                             transform: `translateY(${virtualRow.start}px)`,
                           }}
-                          className="flex items-center p-1" 
+                          className="w-full border-b border-border/50 hover:bg-primary/10 rounded-sm" 
                         >
-                          <div className="text-sm text-foreground p-2 rounded hover:bg-primary/10 flex items-start h-full w-full border-b border-border/50">
-                            <span className="mr-3 text-primary/80 w-8 text-right shrink-0 tabular-nums pt-0.5">
+                          <div className="flex items-start px-3 py-3 h-full">
+                            <span className="mr-3 text-primary/80 w-8 text-right shrink-0 tabular-nums pt-[1px]">
                               {(virtualRow.index + 1)}.
                             </span>
-                            <UserCircle className="h-5 w-5 mr-2.5 text-primary/80 shrink-0 mt-0.5" />
-                            <div className="flex-grow overflow-hidden">
+                            <UserCircle className="h-5 w-5 mr-2.5 text-primary/80 shrink-0 mt-[1px]" />
+                            <div className="flex-grow overflow-hidden flex flex-col">
                               <p className="font-medium truncate text-base">{entry.name}</p>
-                              <p className="text-xs text-muted-foreground truncate">{entry.id}</p>
+                              <p className="text-xs text-muted-foreground truncate mt-1">{entry.id}</p>
                             </div>
                           </div>
                         </div>
