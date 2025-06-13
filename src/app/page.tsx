@@ -13,7 +13,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
-  ListChecks,
   Users,
   Gift,
   AlertCircle,
@@ -30,7 +29,7 @@ import WinnerHistory from "@/components/winner-history";
 import Image from "next/image";
 
 const DEBOUNCE_DELAY = 300; // milliseconds
-const MAX_WINNER_HISTORY = 30;
+export const MAX_WINNER_HISTORY = 30;
 
 interface NameEntry {
   id: string;
@@ -44,9 +43,7 @@ interface WinnerEntry {
 }
 
 export default function ExcelChooserPage() {
-  const [file, setFile] = useState<File | null>(null);
   const [entries, setEntries] = useState<NameEntry[]>([]);
-  const [chosenEntry, setChosenEntry] = useState<NameEntry | null>(null);
   const [winnerHistory, setWinnerHistory] = useState<WinnerEntry[]>([]);
   const [currentWinner, setCurrentWinner] = useState<WinnerEntry | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -70,16 +67,12 @@ export default function ExcelChooserPage() {
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
     if (selectedFile) {
-      setFile(selectedFile);
       setError(null);
       setEntries([]);
-      setChosenEntry(null);
       setCurrentWinner(null);
       setSearchQuery("");
       setDebouncedSearchQuery("");
       handleSubmitFile(selectedFile);
-    } else {
-      setFile(null);
     }
   };
 
@@ -97,7 +90,6 @@ export default function ExcelChooserPage() {
     setIsLoading(true);
     setError(null);
     setEntries([]);
-    setChosenEntry(null);
     setCurrentWinner(null);
 
     const formData = new FormData();
@@ -143,7 +135,6 @@ export default function ExcelChooserPage() {
         timestamp: new Date(),
       };
 
-      setChosenEntry(selectedEntry);
       setCurrentWinner(winner);
 
       // Add to winner history (keep only last 30)
@@ -165,10 +156,6 @@ export default function ExcelChooserPage() {
       });
     }
   };
-
-  useEffect(() => {
-    setChosenEntry(null);
-  }, [entries, searchQuery]);
 
   const rowVirtualizer = useVirtualizer({
     count: filteredEntries.length,
@@ -204,34 +191,48 @@ export default function ExcelChooserPage() {
               </div>
             </div>
 
-            {/* Contact Info */}
-            <div className="hidden md:flex items-center space-x-6 text-sm">
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-accent rounded-full animate-pulse"></div>
-                <span>Hotline: 1900 1870</span>
+            <div className="flex items-center space-x-6">
+              <div className="hidden md:flex flex-col items-end space-y-1 text-sm">
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-accent rounded-full animate-pulse"></div>
+                  <span>Hotline: 1900 1870</span>
+                </div>
+                <div className="text-primary-foreground/80">7h30 - 21h</div>
               </div>
-              <div className="text-primary-foreground/80">7h30 - 21h</div>
             </div>
           </div>
 
           {/* Event Title */}
-          <div className="text-center">
-            <h2 className="text-2xl md:text-3xl font-headline font-bold mb-3">
-              🎉 Chill Mơ Màng với iVIVU thật dễ dàng 🎉
-            </h2>
-            <div className="max-w-4xl mx-auto">
-              <p className="text-lg text-primary-foreground/90 mb-2">
-                Cùng tìm ra{" "}
-                <span className="font-bold text-accent">
-                  30 khách hàng may mắn nhất
-                </span>{" "}
-                với giải thưởng
-              </p>
-              <div className="bg-accent/20 rounded-lg px-4 py-2 inline-block">
-                <p className="font-semibold text-accent text-lg">
-                  "01 Vé xem Những Thành Phố Mơ Màng Summer Tour 2025"
+          <div className="flex items-center justify-between gap-8">
+            <div className="flex-1">
+              <h2 className="text-2xl md:text-3xl font-headline font-bold mb-3">
+                🎉 Chill Mơ Màng với iVIVU thật dễ dàng 🎉
+              </h2>
+              <div className="max-w-4xl">
+                <p className="text-lg text-primary-foreground/90 mb-2">
+                  Cùng tìm ra{" "}
+                  <span className="font-bold text-accent">
+                    {MAX_WINNER_HISTORY} khách hàng may mắn nhất
+                  </span>{" "}
+                  với giải thưởng
                 </p>
+                <div className="bg-accent/20 rounded-lg px-4 py-2 inline-block">
+                  <p className="font-semibold text-accent text-lg">
+                    "01 Vé xem Những Thành Phố Mơ Màng Summer Tour 2025"
+                  </p>
+                </div>
               </div>
+            </div>
+
+            {/* Concert Banner */}
+            <div className="hidden lg:block flex-shrink-0">
+              <Image
+                src="/summer-tour.jpg"
+                alt="Summer Tour 2025 Concert Banner"
+                width={600}
+                height={240}
+                className="rounded-lg shadow-md object-cover"
+              />
             </div>
           </div>
         </div>
@@ -338,7 +339,11 @@ export default function ExcelChooserPage() {
                 <CardFooter className="flex justify-center">
                   <Button
                     onClick={handleChooseRandomName}
-                    disabled={isLoading || filteredEntries.length === 0}
+                    disabled={
+                      isLoading ||
+                      filteredEntries.length === 0 ||
+                      winnerHistory.length >= MAX_WINNER_HISTORY
+                    }
                     size="lg"
                     className="font-semibold"
                   >

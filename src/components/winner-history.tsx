@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { ScrollArea } from "./ui/scroll-area";
 import { Trophy, Calendar, User } from "lucide-react";
+import { MAX_WINNER_HISTORY } from "@/app/page";
 
 interface WinnerEntry {
   id: string;
@@ -18,7 +19,9 @@ export default function WinnerHistory({ winners }: WinnerHistoryProps) {
       <CardHeader>
         <CardTitle className="flex items-center space-x-2 font-headline">
           <Trophy className="h-6 w-6 text-primary" />
-          <span>Lịch sử người thắng ({winners.length}/30)</span>
+          <span>
+            Danh sách khách trúng giải ({winners.length}/{MAX_WINNER_HISTORY})
+          </span>
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
