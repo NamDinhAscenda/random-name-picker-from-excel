@@ -1,10 +1,11 @@
-import type {Metadata} from 'next';
-import './globals.css';
+import type { Metadata } from "next";
+import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
-  title: 'Trình Chọn Tên Excel',
-  description: 'Dễ dàng chọn một tên ngẫu nhiên từ danh sách Excel.',
+  title: "Chill Mơ Màng với iVIVU",
+  description:
+    'Cùng tìm ra 30 khách hàng may mắn nhất với giải thưởng "01 Vé xem Những Thành Phố Mơ Màng Summer Tour 2025"',
 };
 
 export default function RootLayout({
@@ -16,8 +17,15 @@ export default function RootLayout({
     <html lang="vi" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap"
+          rel="stylesheet"
+        />
       </head>
       <body className="font-body antialiased" suppressHydrationWarning>
         {children}

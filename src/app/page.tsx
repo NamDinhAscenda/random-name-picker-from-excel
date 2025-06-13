@@ -14,40 +14,41 @@ import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   ListChecks,
-  UploadCloud,
   Users,
   Gift,
   AlertCircle,
-  Loader2,
-  FileText,
   CheckCircle2,
   Search,
   UserCircle,
 } from "lucide-react";
 import { processExcelFile } from "./actions";
 import { useToast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import UploadFileCard from "@/components/upload-file-card";
+import WinnerBanner from "@/components/winner-banner";
+import WinnerHistory from "@/components/winner-history";
+import Image from "next/image";
 
 const DEBOUNCE_DELAY = 300; // milliseconds
+const MAX_WINNER_HISTORY = 30;
 
 interface NameEntry {
   id: string;
   name: string;
 }
 
+interface WinnerEntry {
+  id: string;
+  name: string;
+  timestamp: Date;
+}
+
 export default function ExcelChooserPage() {
   const [file, setFile] = useState<File | null>(null);
   const [entries, setEntries] = useState<NameEntry[]>([]);
   const [chosenEntry, setChosenEntry] = useState<NameEntry | null>(null);
+  const [winnerHistory, setWinnerHistory] = useState<WinnerEntry[]>([]);
+  const [currentWinner, setCurrentWinner] = useState<WinnerEntry | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -73,6 +74,7 @@ export default function ExcelChooserPage() {
       setError(null);
       setEntries([]);
       setChosenEntry(null);
+      setCurrentWinner(null);
       setSearchQuery("");
       setDebouncedSearchQuery("");
       handleSubmitFile(selectedFile);
@@ -96,6 +98,7 @@ export default function ExcelChooserPage() {
     setError(null);
     setEntries([]);
     setChosenEntry(null);
+    setCurrentWinner(null);
 
     const formData = new FormData();
     formData.append("file", currentFile);
@@ -135,7 +138,20 @@ export default function ExcelChooserPage() {
     if (filteredEntries.length > 0) {
       const randomIndex = Math.floor(Math.random() * filteredEntries.length);
       const selectedEntry = filteredEntries[randomIndex];
+      const winner: WinnerEntry = {
+        ...selectedEntry,
+        timestamp: new Date(),
+      };
+
       setChosenEntry(selectedEntry);
+      setCurrentWinner(winner);
+
+      // Add to winner history (keep only last 30)
+      setWinnerHistory((prev) => {
+        const newHistory = [winner, ...prev];
+        return newHistory.slice(0, MAX_WINNER_HISTORY);
+      });
+
       toast({
         title: "Đã chọn mục!",
         description: `"${selectedEntry.name} (ID: ${selectedEntry.id})" là người may mắn!`,
@@ -162,240 +178,188 @@ export default function ExcelChooserPage() {
   });
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-8 bg-background font-body">
-      <main className="w-full max-w-2xl space-y-8">
-        <header className="text-center">
-          <div className="flex items-center justify-center space-x-3 mb-2">
-            <ListChecks className="h-10 w-10 text-primary" />
-            <h1 className="text-4xl font-headline font-bold text-foreground">
-              Trình chọn ID & tên Excel
-            </h1>
-          </div>
-          <p className="text-muted-foreground font-headline">
-            Tải lên tệp Excel chứa ID, tên và để số phận quyết định!
-          </p>
-        </header>
-
-        <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2 font-headline">
-              <UploadCloud className="h-6 w-6 text-primary" />
-              <span>Tải lên tệp Excel của bạn</span>
-            </CardTitle>
-            <CardDescription>Chọn một tệp .xlsx</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="">
-              <Input
-                id="excel-file"
-                type="file"
-                accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                onChange={handleFileChange}
-                disabled={isLoading}
-                className={cn(
-                  "bg-input",
-                  "file:text-primary-foreground file:bg-primary hover:file:bg-primary/90",
-                  "file:font-semibold",
-                  "file:py-2 file:px-4",
-                  "file:rounded-md",
-                  "file:border-0",
-                  "file:mr-3"
-                )}
-              />
-              {isLoading && (
-                <div className="flex items-center space-x-2 text-muted-foreground mt-2">
-                  <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                  <span>Đang xử lý tệp của bạn... Vui lòng đợi.</span>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {entries.length === 0 && !isLoading && (
-          <Card className="shadow-md">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2 font-headline">
-                <FileText className="h-6 w-6 text-primary" />
-                <span>Định dạng tệp Excel ví dụ</span>
-              </CardTitle>
-              <CardDescription>
-                Dưới đây là ví dụ về cách tệp Excel của bạn nên được cấu trúc
-                (hàng đầu tiên là tiêu đề và sẽ được bỏ qua).
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[150px]">
-                      Mã nhân viên (ví dụ)
-                    </TableHead>
-                    <TableHead>Họ và tên (ví dụ)</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <TableRow>
-                    <TableCell className="font-medium">VTL0030358</TableCell>
-                    <TableCell>Nguyễn Văn A</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-medium">VTL0030359</TableCell>
-                    <TableCell>Trần Thị B</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-medium">NV0012345</TableCell>
-                    <TableCell>Lê Văn C</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-medium">...</TableCell>
-                    <TableCell>...</TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        )}
-
-        {error && (
-          <Alert variant="destructive" className="shadow-md">
-            <AlertCircle className="h-5 w-5" />
-            <AlertTitle>Lỗi</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-
-        {entries.length > 0 && !isLoading && (
-          <Card className="shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2 font-headline">
-                <Users className="h-6 w-6 text-primary" />
-                <span>
-                  Các mục đã tải ({filteredEntries.length} / {entries.length})
-                </span>
-              </CardTitle>
-              <CardDescription>
-                Đây là danh sách các ID và tên được tải từ tệp của bạn. Sử dụng
-                ô tìm kiếm hoặc chọn một mục ngẫu nhiên.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="mb-4 relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <Input
-                  type="text"
-                  placeholder="Tìm kiếm ID hoặc tên..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
+    <div className="min-h-screen bg-background font-body">
+      {/* Header */}
+      <header className="w-full bg-primary text-primary-foreground shadow-lg">
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex items-center justify-between mb-6">
+            {/* Logo and Brand */}
+            <div className="flex items-center space-x-4">
+              <div className="w-16 h-12 flex items-center justify-center">
+                <Image
+                  className="w-full h-full"
+                  src="/logo-goc-ivv.svg"
+                  alt="iVIVU Logo"
+                  width={69}
+                  height={50}
                 />
               </div>
-              <div
-                ref={parentRef}
-                className="h-64 w-full rounded-md border overflow-y-auto bg-muted/30 p-2"
-              >
-                {rowVirtualizer.getTotalSize() > 0 ? (
-                  <div
-                    style={{
-                      height: `${rowVirtualizer.getTotalSize()}px`,
-                      width: "100%",
-                      position: "relative",
-                    }}
-                  >
-                    {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-                      const entry = filteredEntries[virtualRow.index];
-                      return (
-                        <div
-                          key={virtualRow.key}
-                          style={{
-                            position: "absolute",
-                            top: 0,
-                            left: 0,
-                            width: "100%",
-                            height: `${virtualRow.size}px`,
-                            transform: `translateY(${virtualRow.start}px)`,
-                          }}
-                          className="w-full border-b border-border/50 hover:bg-primary/10 rounded-sm"
-                        >
-                          <div className="flex items-center px-3 py-3 h-full">
-                            <span className="mr-3 text-primary/80 w-8 text-right shrink-0 tabular-nums">
-                              {virtualRow.index + 1}.
-                            </span>
-                            <UserCircle className="h-5 w-5 mr-2.5 text-primary/80 shrink-0" />
-                            <div className="flex-grow overflow-hidden flex flex-col justify-center">
-                              <p className="font-medium truncate text-base leading-tight">
-                                {entry.name}
-                              </p>
-                              <p className="text-xs text-muted-foreground truncate mt-0.5">
-                                {entry.id}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    {searchQuery && entries.length > 0
-                      ? "Không có mục nào khớp với tìm kiếm của bạn."
-                      : "Chưa có mục nào được tải hoặc danh sách trống."}
-                  </p>
-                )}
+              <div>
+                <h1 className="text-2xl md:text-3xl font-bold font-headline">
+                  iVIVU.com
+                </h1>
+                <p className="text-sm text-primary-foreground/80">
+                  Chương trình quay số may mắn
+                </p>
               </div>
-            </CardContent>
-            <CardFooter className="flex justify-center">
-              <Button
-                onClick={handleChooseRandomName}
-                disabled={isLoading || filteredEntries.length === 0}
-                size="lg"
-                className="font-semibold"
-              >
-                <Gift className="mr-2 h-5 w-5" />
-                Chọn mục ngẫu nhiên
-              </Button>
-            </CardFooter>
-          </Card>
-        )}
+            </div>
 
-        {chosenEntry && (
-          <Card className="bg-primary text-primary-foreground shadow-xl transform transition-all duration-500 ease-out scale-100 animate-in fade-in zoom-in-90">
-            <CardHeader className="items-center text-center">
-              <CardTitle className="text-3xl font-headline flex items-center justify-center space-x-2">
-                <Gift className="h-8 w-8" />
-                <span>Và người được chọn là...</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-center">
-              <div className="py-6 px-4 bg-primary-foreground/10 rounded-lg shadow-inner">
-                <p className="text-4xl font-bold font-headline break-all">
-                  {chosenEntry.name}
-                </p>
-                <p className="text-xl font-mono text-muted-foreground/90 mt-1">
-                  {chosenEntry.id}
+            {/* Contact Info */}
+            <div className="hidden md:flex items-center space-x-6 text-sm">
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-accent rounded-full animate-pulse"></div>
+                <span>Hotline: 1900 1870</span>
+              </div>
+              <div className="text-primary-foreground/80">7h30 - 21h</div>
+            </div>
+          </div>
+
+          {/* Event Title */}
+          <div className="text-center">
+            <h2 className="text-2xl md:text-3xl font-headline font-bold mb-3">
+              🎉 Chill Mơ Màng với iVIVU thật dễ dàng 🎉
+            </h2>
+            <div className="max-w-4xl mx-auto">
+              <p className="text-lg text-primary-foreground/90 mb-2">
+                Cùng tìm ra{" "}
+                <span className="font-bold text-accent">
+                  30 khách hàng may mắn nhất
+                </span>{" "}
+                với giải thưởng
+              </p>
+              <div className="bg-accent/20 rounded-lg px-4 py-2 inline-block">
+                <p className="font-semibold text-accent text-lg">
+                  "01 Vé xem Những Thành Phố Mơ Màng Summer Tour 2025"
                 </p>
               </div>
-            </CardContent>
-            <CardFooter className="justify-center">
-              <Button
-                variant="secondary"
-                onClick={() => {
-                  setChosenEntry(null);
-                  setSearchQuery("");
-                  setDebouncedSearchQuery("");
-                }}
-              >
-                Xóa lựa chọn & tìm kiếm
-              </Button>
-            </CardFooter>
-          </Card>
-        )}
-      </main>
-      <footer className="mt-12 text-center text-sm text-muted-foreground">
-        <p>
-          &copy; {new Date().getFullYear()} Trình chọn ID & tên Excel bởi Kim
-          Oanh. Hãy chọn một cách khôn ngoan!
-        </p>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content - 2 Column Layout */}
+      <div className="container mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 min-h-[calc(100vh-200px)]">
+          {/* Left Column - 40% width (2/5) */}
+          <div className="lg:col-span-2 space-y-6">
+            <UploadFileCard
+              handleFileChange={handleFileChange}
+              isLoading={isLoading}
+            />
+
+            {error && (
+              <Alert variant="destructive" className="shadow-md">
+                <AlertCircle className="h-5 w-5" />
+                <AlertTitle>Lỗi</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            {entries.length > 0 && !isLoading && (
+              <Card className="shadow-lg">
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2 font-headline">
+                    <Users className="h-6 w-6 text-primary" />
+                    <span>
+                      Các mục đã tải ({filteredEntries.length} /{" "}
+                      {entries.length})
+                    </span>
+                  </CardTitle>
+                  <CardDescription>
+                    Danh sách Khách hàng đã đặt dịch vụ tại iVIVU.com từ ngày
+                    06/06 đến 22/06/2025.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="mb-4 relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <Input
+                      type="text"
+                      placeholder="Tìm kiếm ID hoặc tên..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                  <div
+                    ref={parentRef}
+                    className="h-64 w-full rounded-md border overflow-y-auto bg-muted/30 p-2"
+                  >
+                    {rowVirtualizer.getTotalSize() > 0 ? (
+                      <div
+                        style={{
+                          height: `${rowVirtualizer.getTotalSize()}px`,
+                          width: "100%",
+                          position: "relative",
+                        }}
+                      >
+                        {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                          const entry = filteredEntries[virtualRow.index];
+                          return (
+                            <div
+                              key={virtualRow.key}
+                              style={{
+                                position: "absolute",
+                                top: 0,
+                                left: 0,
+                                width: "100%",
+                                height: `${virtualRow.size}px`,
+                                transform: `translateY(${virtualRow.start}px)`,
+                              }}
+                              className="w-full border-b border-border/50 hover:bg-primary/10 rounded-sm"
+                            >
+                              <div className="flex items-center px-3 py-3 h-full">
+                                <span className="mr-3 text-primary/80 w-8 text-right shrink-0 tabular-nums">
+                                  {virtualRow.index + 1}.
+                                </span>
+                                <UserCircle className="h-5 w-5 mr-2.5 text-primary/80 shrink-0" />
+                                <div className="flex-grow overflow-hidden flex flex-col justify-center">
+                                  <p className="font-medium truncate text-base leading-tight">
+                                    {entry.name}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground truncate mt-0.5">
+                                    {entry.id}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground text-center py-4">
+                        {searchQuery && entries.length > 0
+                          ? "Không có mục nào khớp với tìm kiếm của bạn."
+                          : "Chưa có mục nào được tải hoặc danh sách trống."}
+                      </p>
+                    )}
+                  </div>
+                </CardContent>
+                <CardFooter className="flex justify-center">
+                  <Button
+                    onClick={handleChooseRandomName}
+                    disabled={isLoading || filteredEntries.length === 0}
+                    size="lg"
+                    className="font-semibold"
+                  >
+                    <Gift className="mr-2 h-5 w-5" />
+                    Chọn ngẫu nhiên
+                  </Button>
+                </CardFooter>
+              </Card>
+            )}
+          </div>
+
+          {/* Right Column - 60% width (3/5) */}
+          <div className="lg:col-span-3 space-y-6">
+            <WinnerBanner winner={currentWinner} />
+            <WinnerHistory winners={winnerHistory} />
+          </div>
+        </div>
+      </div>
+
+      <footer className="mt-12 text-center text-sm text-muted-foreground py-6 border-t">
+        <p>&copy; {new Date().getFullYear()}</p>
       </footer>
     </div>
   );
