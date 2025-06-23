@@ -27,6 +27,8 @@ import UploadFileCard from "@/components/upload-file-card";
 import WinnerBanner from "@/components/winner-banner";
 import WinnerHistory from "@/components/winner-history";
 import Image from "next/image";
+import ivivuLogo from "../../public/ivivu_w_slogan.png";
+import summerTourBanner from "../../public/summer-tour.png";
 
 const DEBOUNCE_DELAY = 300; // milliseconds
 export const MAX_WINNER_HISTORY = 30;
@@ -139,8 +141,8 @@ export default function ExcelChooserPage() {
 
       // Add to winner history (keep only last 30)
       setWinnerHistory((prev) => {
-        const newHistory = [winner, ...prev];
-        return newHistory.slice(0, MAX_WINNER_HISTORY);
+        const newHistory = [...prev, winner];
+        return newHistory.slice(-MAX_WINNER_HISTORY);
       });
 
       toast({
@@ -171,24 +173,8 @@ export default function ExcelChooserPage() {
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between mb-6">
             {/* Logo and Brand */}
-            <div className="flex items-center space-x-4">
-              <div className="w-16 h-12 flex items-center justify-center">
-                <Image
-                  className="w-full h-full"
-                  src="/logo-goc-ivv.svg"
-                  alt="iVIVU Logo"
-                  width={69}
-                  height={50}
-                />
-              </div>
-              <div>
-                <h1 className="text-2xl md:text-3xl font-bold font-headline">
-                  iVIVU.com
-                </h1>
-                <p className="text-sm text-primary-foreground/80">
-                  Chương trình quay số may mắn
-                </p>
-              </div>
+            <div className="flex items-center justify-center">
+              <Image height={60} src={ivivuLogo} alt="iVIVU Logo" />
             </div>
 
             <div className="flex items-center space-x-6">
@@ -227,10 +213,9 @@ export default function ExcelChooserPage() {
             {/* Concert Banner */}
             <div className="hidden lg:block flex-shrink-0">
               <Image
-                src="/summer-tour.jpg"
+                src={summerTourBanner}
                 alt="Summer Tour 2025 Concert Banner"
-                width={600}
-                height={240}
+                height={300}
                 className="rounded-lg shadow-md object-cover"
               />
             </div>
@@ -261,10 +246,7 @@ export default function ExcelChooserPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2 font-headline">
                     <Users className="h-6 w-6 text-primary" />
-                    <span>
-                      Các mục đã tải ({filteredEntries.length} /{" "}
-                      {entries.length})
-                    </span>
+                    <span>Khách hàng</span>
                   </CardTitle>
                   <CardDescription>
                     Danh sách Khách hàng đã đặt dịch vụ tại iVIVU.com từ ngày
@@ -310,9 +292,6 @@ export default function ExcelChooserPage() {
                               className="w-full border-b border-border/50 hover:bg-primary/10 rounded-sm"
                             >
                               <div className="flex items-center px-3 py-3 h-full">
-                                <span className="mr-3 text-primary/80 w-8 text-right shrink-0 tabular-nums">
-                                  {virtualRow.index + 1}.
-                                </span>
                                 <UserCircle className="h-5 w-5 mr-2.5 text-primary/80 shrink-0" />
                                 <div className="flex-grow overflow-hidden flex flex-col justify-center">
                                   <p className="font-medium truncate text-base leading-tight">
